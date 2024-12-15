@@ -2,6 +2,7 @@ from typing import Any, Dict, Hashable, List
 
 import pandas as pd
 
+
 def reading_excel(path_to_excel: str) -> List[Dict[Hashable, Any]]:
     """Функция для считывания финансовых операций из XLSX файла"""
     if not isinstance(path_to_excel, str):
@@ -12,4 +13,3 @@ def reading_excel(path_to_excel: str) -> List[Dict[Hashable, Any]]:
         return excel_reader
     except FileNotFoundError:
         return []
-
