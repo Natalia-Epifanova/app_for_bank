@@ -17,7 +17,7 @@ logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)
 
 
-def profitable_cashback_categories(transactions: List[Dict[Hashable, Any]], year, month) -> str:
+def profitable_cashback_categories(transactions: List[Dict[Hashable, Any]], year, month) -> str | list:
     """Функция считает, какие были более выгодные категории кешбека в выбранном месяце"""
     logger.info("Начало работы функции для поиска более выгодных категорий кешбека")
     if not isinstance(month, str) or not isinstance(transactions, list) or not isinstance(year, str):
@@ -53,7 +53,7 @@ def investment_bank(month: str, transactions: List[Dict[Hashable, Any]], limit: 
     logger.info("Начало работы функции Инвесткопилка")
     if not datetime.strptime(month, "%Y-%m"):
         logger.error("Месяц указан в некорректном формате")
-        raise ValueError("Месяц указан в некорректном формате")
+        raise TypeError("Месяц указан в некорректном формате")
 
     if not isinstance(month, str) or not isinstance(transactions, list) or not isinstance(limit, int):
         logger.error("Неверный тип входных данных")
@@ -61,26 +61,30 @@ def investment_bank(month: str, transactions: List[Dict[Hashable, Any]], limit: 
 
     transactions_for_month = []
     logger.info("Поиск транзакций за заданный месяц в списке транзакций")
-    for transaction in transactions:
-        date_obj = datetime.strptime(str(transaction.get("Дата операции")), "%d.%m.%Y %H:%M:%S")
-        month_trans = str(date_obj.year) + "-" + str(date_obj.month)
-        if month_trans == month:
-            transactions_for_month.append(transaction)
+    if transactions:
+        for transaction in transactions:
+            date_obj = datetime.strptime(str(transaction.get("Дата операции")), "%d.%m.%Y %H:%M:%S")
+            month_trans = str(date_obj.year) + "-" + str(date_obj.month)
+            if month_trans == month:
+                transactions_for_month.append(transaction)
 
-    sum_for_invest = 0.0
-    if transactions_for_month:
-        logger.info("Обработка всех оплат за заданный месяц")
-        for transaction in transactions_for_month:
-            sum_of_operation = str(transaction.get("Сумма операции"))
-            if sum_of_operation[0] == "-":
-                sum_for_invest += math.ceil(float(sum_of_operation[1:]) / float(limit)) * limit - float(
-                    sum_of_operation[1:]
-                )
-    logger.info("Функция отработала успешно!")
-    return round(sum_for_invest, 2)
+        sum_for_invest = 0.0
+        if transactions_for_month:
+            logger.info("Обработка всех оплат за заданный месяц")
+            for transaction in transactions_for_month:
+                sum_of_operation = str(transaction.get("Сумма операции"))
+                if sum_of_operation[0] == "-":
+                    sum_for_invest += math.ceil(float(sum_of_operation[1:]) / float(limit)) * limit - float(
+                        sum_of_operation[1:]
+                    )
+        logger.info("Функция отработала успешно!")
+        return round(sum_for_invest, 2)
+    else:
+        logger.info("Словарь оказался пустым")
+        return transactions_for_month
 
 
-def search_by_string(transactions: List[Dict[Hashable, Any]], string_for_search: str) -> str:
+def search_by_string(transactions: List[Dict[Hashable, Any]], string_for_search: str) -> str | list:
     """Функция возвращает список словарей с транзакциями, у которых в описании есть необходимая слово/строка"""
     logger.info("Начало работы функции для поиска по строке")
     if not isinstance(transactions, list) or not isinstance(string_for_search, str):
@@ -89,18 +93,22 @@ def search_by_string(transactions: List[Dict[Hashable, Any]], string_for_search:
     pattern = rf"{string_for_search}"
     result_list = []
     logger.info("Поиск необходимой строки в категориях и описаниях транзакций")
-    for transaction in transactions:
-        if re.findall(pattern, str(transaction["Категория"]), flags=re.IGNORECASE):
-            result_list.append(transaction)
-        elif re.findall(pattern, str(transaction["Описание"]), flags=re.IGNORECASE):
-            result_list.append(transaction)
-    logger.info("Перевод полученных данных в JSON ответ")
-    json_data = json.dumps(result_list, ensure_ascii=False, indent=4)
-    logger.info("Функция отработала успешно!")
-    return json_data
+    if transactions:
+        for transaction in transactions:
+            if re.findall(pattern, str(transaction["Категория"]), flags=re.IGNORECASE):
+                result_list.append(transaction)
+            elif re.findall(pattern, str(transaction["Описание"]), flags=re.IGNORECASE):
+                result_list.append(transaction)
+        logger.info("Перевод полученных данных в JSON ответ")
+        json_data = json.dumps(result_list, ensure_ascii=False, indent=4)
+        logger.info("Функция отработала успешно!")
+        return json_data
+    else:
+        logger.info("Словарь оказался пустым")
+        return result_list
 
 
-def search_by_phone(transactions: List[Dict[Hashable, Any]]) -> str:
+def search_by_phone(transactions: List[Dict[Hashable, Any]]) -> str | list:
     """Функция осуществляет поиск среди операций по телефонным номерам"""
     logger.info("Начало работы функции для поиска по номеру телефона")
     if not isinstance(transactions, list):
@@ -110,15 +118,19 @@ def search_by_phone(transactions: List[Dict[Hashable, Any]]) -> str:
     pattern = re.compile(r"\d\s\d{3}\s\d{3}-\d{2}-\d{2}")
     new_transactions_list = []
     logger.info("Поиск в словаре транзакций операций по мобильной связи")
-    for transaction in transactions:
-        if re.findall(pattern, str(transaction["Описание"])):
-            new_transactions_list.append(transaction)
-    json_data = json.dumps(new_transactions_list, ensure_ascii=False, indent=4)
-    logger.info("Функция отработала успешно!")
-    return json_data
+    if transactions:
+        for transaction in transactions:
+            if re.findall(pattern, str(transaction["Описание"])):
+                new_transactions_list.append(transaction)
+        logger.info("Перевод полученных данных в JSON ответ")
+        json_data = json.dumps(new_transactions_list, ensure_ascii=False, indent=4)
+        logger.info("Функция отработала успешно!")
+        return json_data
+    else:
+        logger.info("Словарь оказался пустым")
+        return new_transactions_list
 
-
-def search_by_transfers_to_individuals(transactions: List[Dict[Hashable, Any]]) -> str:
+def search_by_transfers_to_individuals(transactions: List[Dict[Hashable, Any]]) -> str | list:
     """Функция осуществляет поиск переводов физическим лицам"""
     logger.info("Начало работы функции для поиска переводов физическим лицам")
     if not isinstance(transactions, list):
@@ -128,17 +140,22 @@ def search_by_transfers_to_individuals(transactions: List[Dict[Hashable, Any]]) 
     pattern = re.compile(r"^[А-Яа-я]+\s[А-Я]\.$")
     new_transactions_list = []
     logger.info("Поиск в словаре транзакций переводов физическим лицам")
-    for transaction in transactions:
-        if (str(transaction["Категория"]) == "Переводы") and (re.findall(pattern, str(transaction["Описание"]))):
-            new_transactions_list.append(transaction)
-    json_data = json.dumps(new_transactions_list, ensure_ascii=False, indent=4)
-    logger.info("Функция отработала успешно!")
-    return json_data
+    if transactions:
+        for transaction in transactions:
+            if (str(transaction["Категория"]) == "Переводы") and (re.findall(pattern, str(transaction["Описание"]))):
+                new_transactions_list.append(transaction)
+        json_data = json.dumps(new_transactions_list, ensure_ascii=False, indent=4)
+        logger.info("Функция отработала успешно!")
+        return json_data
+    else:
+        logger.info("Словарь оказался пустым")
+        return new_transactions_list
 
 
 trans = reading_excel("../data/operations.xlsx")
 # print(investment_bank("2021-12", trans, 50))
 # print(search_by_string(trans, 'Каршеринг'))
 # print(profitable_cashback_categories(trans, "2021", "3"))
-# (search_by_phone(trans))
-print(search_by_transfers_to_individuals(trans))
+# print(search_by_phone(trans))
+#print(search_by_transfers_to_individuals(trans))
+
