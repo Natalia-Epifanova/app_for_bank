@@ -1,11 +1,11 @@
 from datetime import datetime
 import json
 import math
-from typing import Any, Dict, Hashable, List
-
+from typing import Any, Dict, Hashable, List, final
 from src.reading_excel_file import reading_excel
 import logging
 import re
+import pandas as pd
 
 logger = logging.getLogger("services")
 file_handler = logging.FileHandler("../logs/services.log", mode="w", encoding="utf-8")
@@ -15,8 +15,35 @@ logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)
 
 
-def profitable_cashback_categories(data, year, month):
-    pass
+def profitable_cashback_categories(transactions: List[Dict[Hashable, Any]], year, month):
+    """Функция считает, какие были более выгодные категории кешбека в выбранном месяце"""
+    logger.info("Начало работы функции для поиска более выгодных категорий кешбека")
+    if not isinstance(month, str) or not isinstance(transactions, list) or not isinstance(year, str):
+        logger.error("Неверный тип входных данных")
+        raise TypeError("Неверный тип входных данных")
+    transactions_for_month = []
+    logger.info("Поиск транзакций за заданный месяц в списке транзакций")
+    for transaction in transactions:
+        date_obj = datetime.strptime(str(transaction.get("Дата операции")), "%d.%m.%Y %H:%M:%S")
+        month_trans = str(date_obj.year) + "-" + str(date_obj.month)
+        if month_trans == (year + "-" + month):
+            transactions_for_month.append(transaction)
+    logger.info("Обработка всех оплат за заданный месяц")
+
+    df = pd.DataFrame(transactions_for_month)
+    logger.info("Группировка оп категориям кэшбэка")
+    result = df.groupby("Категория")["Кэшбэк"].sum()
+    logger.info("Сортировка кэшбэка по убыванию")
+    result = result.sort_values(ascending=False)
+    result_dict = result.to_dict()
+
+    final_result = {}
+    for key, value in result_dict.items():
+
+        if value > 0:
+            final_result[key] = value
+    logger.info("Функция отработала успешно!")
+    return json.dumps(final_result, ensure_ascii=False, indent=4)
 
 
 def investment_bank(month: str, transactions: List[Dict[Hashable, Any]], limit: int) -> float:
@@ -47,7 +74,7 @@ def investment_bank(month: str, transactions: List[Dict[Hashable, Any]], limit: 
                 sum_for_invest += math.ceil(float(sum_of_operation[1:]) / float(limit)) * limit - float(
                     sum_of_operation[1:]
                 )
-    logger.info("Функция отработала успешно")
+    logger.info("Функция отработала успешно!")
     return round(sum_for_invest, 2)
 
 
@@ -66,13 +93,14 @@ def search_by_string(transactions: List[Dict[Hashable, Any]], string_for_search:
         elif re.findall(pattern, str(transaction["Описание"]), flags=re.IGNORECASE):
             result_list.append(transaction)
     logger.info("Перевод полученных данных в JSON ответ")
-    json_data = json.dumps(result_list, ensure_ascii=False)
-    logger.info("Функция отработала успешно")
+    json_data = json.dumps(result_list, ensure_ascii=False, indent=4)
+    logger.info("Функция отработала успешно!")
     return json_data
 
 
 ###########  ????????Нужно ли тут записывать в json файл???
 
 trans = reading_excel("../data/operations.xlsx")
-print(investment_bank("2021-12", trans, 50))
-print(search_by_string(trans, 'Каршеринг'))
+# print(investment_bank("2021-12", trans, 50))
+# print(search_by_string(trans, 'Каршеринг'))
+# print(profitable_cashback_categories(trans, "2021", "3"))
