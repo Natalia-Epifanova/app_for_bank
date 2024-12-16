@@ -98,9 +98,26 @@ def search_by_string(transactions: List[Dict[Hashable, Any]], string_for_search:
     return json_data
 
 
-###########  ????????Нужно ли тут записывать в json файл???
+def search_by_phone(transactions: List[Dict[Hashable, Any]]) -> str:
+    """Функция осуществляет поиск среди операций по телефонным номерам"""
+    logger.info("Начало работы функции для поиска по номеру телефона")
+    if not isinstance(transactions, list):
+        logger.error("Неверный тип входных данных")
+        raise TypeError("Неверный тип входных данных")
+
+    pattern = re.compile(r'\d\s\d{3}\s\d{3}-\d{2}-\d{2}')
+    new_transactions_list = []
+    logger.info("Поиск в словаре транзакций операций по мобильной связи!")
+    for transaction in transactions:
+        if re.findall(pattern, str(transaction["Описание"])):
+            new_transactions_list.append(transaction)
+    json_data = json.dumps(new_transactions_list, ensure_ascii=False, indent=4)
+    logger.info("Функция отработала успешно!")
+    return json_data
+
 
 trans = reading_excel("../data/operations.xlsx")
 # print(investment_bank("2021-12", trans, 50))
 # print(search_by_string(trans, 'Каршеринг'))
 # print(profitable_cashback_categories(trans, "2021", "3"))
+print(search_by_phone(trans))
