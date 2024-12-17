@@ -3,7 +3,7 @@ import logging
 import math
 import re
 from datetime import datetime
-from typing import Any, Dict, Hashable, List, final
+from typing import Any, Dict, Hashable, List
 
 import pandas as pd
 
@@ -33,7 +33,7 @@ def profitable_cashback_categories(transactions: List[Dict[Hashable, Any]], year
     logger.info("Обработка всех оплат за заданный месяц")
 
     df = pd.DataFrame(transactions_for_month)
-    logger.info("Группировка оп категориям кэшбэка")
+    logger.info("Группировка по категориям кэшбэка")
     result = df.groupby("Категория")["Кэшбэк"].sum()
     logger.info("Сортировка кэшбэка по убыванию")
     result = result.sort_values(ascending=False)
