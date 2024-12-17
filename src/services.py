@@ -42,18 +42,15 @@ def profitable_cashback_categories(transactions: List[Dict[Hashable, Any]], year
     final_result = {}
     for key, value in result_dict.items():
 
-        if value > 0:
+        if float(value) > 0:
             final_result[key] = value
     logger.info("Функция отработала успешно!")
     return json.dumps(final_result, ensure_ascii=False, indent=4)
 
 
-def investment_bank(month: str, transactions: List[Dict[Hashable, Any]], limit: int) -> float:
+def investment_bank(month: str, transactions: List[Dict[Hashable, Any]], limit: int) -> float | None:
     """Функция возвращает сумму, которую удалось бы отложить в Инвесткопилку"""
     logger.info("Начало работы функции Инвесткопилка")
-    if not datetime.strptime(month, "%Y-%m"):
-        logger.error("Месяц указан в некорректном формате")
-        raise TypeError("Месяц указан в некорректном формате")
 
     if not isinstance(month, str) or not isinstance(transactions, list) or not isinstance(limit, int):
         logger.error("Неверный тип входных данных")
@@ -81,10 +78,9 @@ def investment_bank(month: str, transactions: List[Dict[Hashable, Any]], limit: 
         return round(sum_for_invest, 2)
     else:
         logger.info("Словарь оказался пустым")
-        return transactions_for_month
 
 
-def search_by_string(transactions: List[Dict[Hashable, Any]], string_for_search: str) -> str | list:
+def search_by_string(transactions: List[Dict[Hashable, Any]], string_for_search: str) -> str | None:
     """Функция возвращает список словарей с транзакциями, у которых в описании есть необходимая слово/строка"""
     logger.info("Начало работы функции для поиска по строке")
     if not isinstance(transactions, list) or not isinstance(string_for_search, str):
@@ -105,10 +101,9 @@ def search_by_string(transactions: List[Dict[Hashable, Any]], string_for_search:
         return json_data
     else:
         logger.info("Словарь оказался пустым")
-        return result_list
 
 
-def search_by_phone(transactions: List[Dict[Hashable, Any]]) -> str | list:
+def search_by_phone(transactions: List[Dict[Hashable, Any]]) -> str | None:
     """Функция осуществляет поиск среди операций по телефонным номерам"""
     logger.info("Начало работы функции для поиска по номеру телефона")
     if not isinstance(transactions, list):
@@ -128,9 +123,9 @@ def search_by_phone(transactions: List[Dict[Hashable, Any]]) -> str | list:
         return json_data
     else:
         logger.info("Словарь оказался пустым")
-        return new_transactions_list
 
-def search_by_transfers_to_individuals(transactions: List[Dict[Hashable, Any]]) -> str | list:
+
+def search_by_transfers_to_individuals(transactions: List[Dict[Hashable, Any]]) -> str | None:
     """Функция осуществляет поиск переводов физическим лицам"""
     logger.info("Начало работы функции для поиска переводов физическим лицам")
     if not isinstance(transactions, list):
@@ -149,7 +144,6 @@ def search_by_transfers_to_individuals(transactions: List[Dict[Hashable, Any]]) 
         return json_data
     else:
         logger.info("Словарь оказался пустым")
-        return new_transactions_list
 
 
 trans = reading_excel("../data/operations.xlsx")
@@ -157,5 +151,4 @@ trans = reading_excel("../data/operations.xlsx")
 # print(search_by_string(trans, 'Каршеринг'))
 # print(profitable_cashback_categories(trans, "2021", "3"))
 # print(search_by_phone(trans))
-#print(search_by_transfers_to_individuals(trans))
-
+# print(search_by_transfers_to_individuals(trans))
