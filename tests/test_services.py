@@ -2,13 +2,8 @@ import json
 
 import pytest
 
-from src.services import (
-    investment_bank,
-    profitable_cashback_categories,
-    search_by_phone,
-    search_by_string,
-    search_by_transfers_to_individuals,
-)
+from src.services import (investment_bank, profitable_cashback_categories, search_by_phone, search_by_string,
+                          search_by_transfers_to_individuals)
 
 
 def test_search_by_string_description(transactions_for_test):

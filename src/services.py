@@ -17,7 +17,7 @@ logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)
 
 
-def profitable_cashback_categories(transactions: List[Dict[Hashable, Any]], year, month) -> str | list:
+def profitable_cashback_categories(transactions: List[Dict[Hashable, Any]], year:str, month:str) -> str | None:
     """Функция считает, какие были более выгодные категории кешбека в выбранном месяце"""
     logger.info("Начало работы функции для поиска более выгодных категорий кешбека")
     if not isinstance(month, str) or not isinstance(transactions, list) or not isinstance(year, str):
@@ -25,27 +25,31 @@ def profitable_cashback_categories(transactions: List[Dict[Hashable, Any]], year
         raise TypeError("Неверный тип входных данных")
     transactions_for_month = []
     logger.info("Поиск транзакций за заданный месяц в списке транзакций")
-    for transaction in transactions:
-        date_obj = datetime.strptime(str(transaction.get("Дата операции")), "%d.%m.%Y %H:%M:%S")
-        month_trans = str(date_obj.year) + "-" + str(date_obj.month)
-        if month_trans == (year + "-" + month):
-            transactions_for_month.append(transaction)
-    logger.info("Обработка всех оплат за заданный месяц")
+    if transactions:
+        for transaction in transactions:
+            date_obj = datetime.strptime(str(transaction.get("Дата операции")), "%d.%m.%Y %H:%M:%S")
+            month_trans = str(date_obj.year) + "-" + str(date_obj.month)
+            if month_trans == (year + "-" + month):
+                transactions_for_month.append(transaction)
+        logger.info("Обработка всех оплат за заданный месяц")
 
-    df = pd.DataFrame(transactions_for_month)
-    logger.info("Группировка по категориям кэшбэка")
-    result = df.groupby("Категория")["Кэшбэк"].sum()
-    logger.info("Сортировка кэшбэка по убыванию")
-    result = result.sort_values(ascending=False)
-    result_dict = result.to_dict()
+        df = pd.DataFrame(transactions_for_month)
+        logger.info("Группировка по категориям кэшбэка")
+        result = df.groupby("Категория")["Кэшбэк"].sum()
+        logger.info("Сортировка кэшбэка по убыванию")
+        result = result.sort_values(ascending=False)
+        result_dict = result.to_dict()
 
-    final_result = {}
-    for key, value in result_dict.items():
+        final_result = {}
+        for key, value in result_dict.items():
 
-        if float(value) > 0:
-            final_result[key] = value
-    logger.info("Функция отработала успешно!")
-    return json.dumps(final_result, ensure_ascii=False, indent=4)
+            if float(value) > 0:
+                final_result[key] = value
+        logger.info("Функция отработала успешно!")
+        return json.dumps(final_result, ensure_ascii=False, indent=4)
+    else:
+        logger.info("Словарь оказался пустым")
+        return None
 
 
 def investment_bank(month: str, transactions: List[Dict[Hashable, Any]], limit: int) -> float | None:
@@ -78,6 +82,8 @@ def investment_bank(month: str, transactions: List[Dict[Hashable, Any]], limit: 
         return round(sum_for_invest, 2)
     else:
         logger.info("Словарь оказался пустым")
+        return None
+
 
 
 def search_by_string(transactions: List[Dict[Hashable, Any]], string_for_search: str) -> str | None:
@@ -101,6 +107,7 @@ def search_by_string(transactions: List[Dict[Hashable, Any]], string_for_search:
         return json_data
     else:
         logger.info("Словарь оказался пустым")
+        return None
 
 
 def search_by_phone(transactions: List[Dict[Hashable, Any]]) -> str | None:
@@ -123,6 +130,7 @@ def search_by_phone(transactions: List[Dict[Hashable, Any]]) -> str | None:
         return json_data
     else:
         logger.info("Словарь оказался пустым")
+        return None
 
 
 def search_by_transfers_to_individuals(transactions: List[Dict[Hashable, Any]]) -> str | None:
@@ -144,6 +152,7 @@ def search_by_transfers_to_individuals(transactions: List[Dict[Hashable, Any]]) 
         return json_data
     else:
         logger.info("Словарь оказался пустым")
+        return None
 
 
 trans = reading_excel("../data/operations.xlsx")

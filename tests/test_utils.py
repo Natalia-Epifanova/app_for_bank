@@ -1,35 +1,36 @@
-from unittest.mock import patch, mock_open
-from datetime import datetime
 import json
-import pytest
-from requests import RequestException, JSONDecodeError
+from datetime import datetime
+from unittest.mock import mock_open, patch
 
-from src.utils import get_real_time_for_greetings, cards_information, get_currency, json_currency, get_stock_prices, \
-    json_stock_prices, search_transactions_for_month
+import pytest
+from requests import JSONDecodeError, RequestException
+
+from src.utils import (cards_information, get_currency, get_real_time_for_greetings, get_stock_prices, json_currency,
+                       json_stock_prices, search_transactions_for_month)
 
 
 @patch("src.utils.datetime")
 def test_get_real_time_for_greetings_morning(mock_datetime):
     mock_datetime.now.return_value = datetime(2022, 10, 31, 8, 0, 0)
-    assert get_real_time_for_greetings() == 'Доброе утро'
+    assert get_real_time_for_greetings() == "Доброе утро"
 
 
 @patch("src.utils.datetime")
 def test_get_real_time_for_greetings_day(mock_datetime):
     mock_datetime.now.return_value = datetime(2022, 10, 31, 12, 0, 0)
-    assert get_real_time_for_greetings() == 'Добрый день'
+    assert get_real_time_for_greetings() == "Добрый день"
 
 
 @patch("src.utils.datetime")
 def test_get_real_time_for_greetings_evening(mock_datetime):
     mock_datetime.now.return_value = datetime(2022, 10, 31, 19, 0, 0)
-    assert get_real_time_for_greetings() == 'Добрый вечер'
+    assert get_real_time_for_greetings() == "Добрый вечер"
 
 
 @patch("src.utils.datetime")
 def test_get_real_time_for_greetings_night(mock_datetime):
     mock_datetime.now.return_value = datetime(2022, 10, 31, 22, 0, 0)
-    assert get_real_time_for_greetings() == 'Доброй ночи'
+    assert get_real_time_for_greetings() == "Доброй ночи"
 
 
 def test_cards_information(transactions_for_test):
@@ -54,17 +55,19 @@ def test_get_currency_json_currency(mock_get, mock_file):
         "date": "2024-12-03",
         "result": 104.5,
     }
-    assert get_currency('USD') == 104.5
+    assert get_currency("USD") == 104.5
     answer_for_test = json_currency()
-    assert answer_for_test == [{
-        "currency": "USD",
-        "rate": 104.5,
-    }]
+    assert answer_for_test == [
+        {
+            "currency": "USD",
+            "rate": 104.5,
+        }
+    ]
 
 
 @patch("requests.get", side_effect=RequestException)
 def test_get_currency_request_exception(mock_get):
-    result = get_currency('USD')
+    result = get_currency("USD")
     assert result == 0.0
 
 
@@ -84,14 +87,16 @@ def test_get_stock_prices_json_stock_prices(mock_get, mock_file):
         "price": 253.48,
         "exchange": "NASDAQ",
         "updated": 1706302801,
-        "currency": "USD"
+        "currency": "USD",
     }
-    assert get_stock_prices('AAPL') == 253.48
+    assert get_stock_prices("AAPL") == 253.48
     answer_for_test = json_stock_prices()
-    assert answer_for_test == [{
-        "stock": "AAPL",
-        "price": 253.48,
-    }]
+    assert answer_for_test == [
+        {
+            "stock": "AAPL",
+            "price": 253.48,
+        }
+    ]
 
 
 def test_search_transactions_for_month(transactions_for_test_filter_by_month):
@@ -105,6 +110,7 @@ def test_search_transactions_for_month(transactions_for_test_filter_by_month):
             "Кэшбэк": 0,
             "Категория": "Переводы",
             "Описание": "Дмитрий Ш.",
-        }]
+        }
+    ]
 
     assert result == expected_result

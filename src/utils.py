@@ -1,13 +1,13 @@
-import datetime
-from collections import defaultdict
-from datetime import datetime
-from typing import Any, Dict, Hashable, List
-import pandas as pd
-from src.reading_excel_file import reading_excel
+
 import json
+import os
+from typing import Any, Dict, Hashable, List
+from datetime import datetime
+import pandas as pd
 import requests
 from dotenv import load_dotenv
-import os
+
+from src.reading_excel_file import reading_excel
 
 load_dotenv("../.env")
 
@@ -27,7 +27,7 @@ def get_real_time_for_greetings() -> str:
 
 
 def search_transactions_for_month(
-        originals_transactions: List[Dict[Hashable, Any]], date_time: str
+    originals_transactions: List[Dict[Hashable, Any]], date_time: str
 ) -> List[Dict[Hashable, Any]]:
     """Функция оставляет только транзакции за нужный месяц"""
     date_obj = datetime.strptime(date_time, "%Y-%m-%d %H:%M:%S")
@@ -36,43 +36,47 @@ def search_transactions_for_month(
         for transaction in originals_transactions:
             date_obj_trans = datetime.strptime(str(transaction.get("Дата операции")), "%d.%m.%Y %H:%M:%S")
             if (
-                    date_obj_trans.month == date_obj.month
-                    and date_obj_trans.day <= date_obj.day
-                    and date_obj_trans.year == date_obj.year
+                date_obj_trans.month == date_obj.month
+                and date_obj_trans.day <= date_obj.day
+                and date_obj_trans.year == date_obj.year
             ):
                 transactions_for_month.append(transaction)
     return transactions_for_month
 
 
-def cards_information(transactions: List[Dict[Hashable, Any]]) -> List[Dict[Hashable, Any]] | None:
+def cards_information(transactions: List[Dict[Hashable, Any]]) -> list[dict[str, Any]] | None:
     """Функция возвращает расходы и кэшбеки по всей карте за месяц"""
     df = pd.DataFrame(transactions)
     result = df.groupby("Номер карты")["Сумма операции"].sum()
 
     result_dict = result.to_dict()
 
-    result = []
+    final_result = []
     for card_number, values in result_dict.items():
         card = {
             "last_digits": card_number[1:],
-            "total_spent": abs(values),
+            "total_spent": round(abs(values), 2),
             "cashback": round(abs(values) / 100, 2),
         }
-        result.append(card)
-    return result
+        final_result.append(card)
+    return final_result
 
 
 def top_transactions(transactions: List[Dict[Hashable, Any]]) -> str | None:
     """Функция возвращает топ-5 транзакций по оплате за месяц"""
     df = pd.DataFrame(transactions)
-    df['Дата операции'] = pd.to_datetime(df['Дата операции'], format='%d.%m.%Y %H:%M:%S')
-    #rez = df.groupby("Дата операции")["Сумма операции с округлением"].max()
-    df_grouped = df.groupby(df['Дата операции'].dt.date)['Сумма операции с округлением'].max().reset_index()
-    df_grouped_sorted = df_grouped.sort_values(by='Сумма операции с округлением', ascending=False)
-    df_dict = df_grouped_sorted.to_dict()
-    print(df_dict)
-    for index, item in enumerate(df_dict):
-        print(df_dict[item])
+    # df['Дата операции'] = pd.to_datetime(df['Дата операции'], format='%d.%m.%Y %H:%M:%S')
+    # #rez = df.groupby("Дата операции")["Сумма операции с округлением"].max()
+    # df_grouped = df.groupby(df['Дата операции'].dt.date)['Сумма операции с округлением'].max().reset_index()
+    # df_grouped_sorted = df_grouped.sort_values(by='Сумма операции с округлением', ascending=False)
+    # df_dict = df_grouped_sorted.to_dict()
+    # print(df_dict)
+    # for index, item in enumerate(df_dict):
+    #     print(df_dict[item])
+
+    rez = df.sort_values(by="Сумма операции с округлением", ascending=False)
+    top_5 = df.head(5)
+    print(top_5)
 
     # # result = df.groupby("Дата операции")["Сумма операции с округлением"].max()
     # result_2 = df.sort_values(by='Сумма операции с округлением', ascending=False)
@@ -107,10 +111,7 @@ def top_transactions(transactions: List[Dict[Hashable, Any]]) -> str | None:
 def get_currency(currency: str) -> float:
     """Функция возвращает актуальные данные курса валют"""
     try:
-        url = (
-            f"https://api.apilayer.com/exchangerates_data/convert?to=RUB&from="
-            f"{currency}&amount=1"
-        )
+        url = f"https://api.apilayer.com/exchangerates_data/convert?to=RUB&from=" f"{currency}&amount=1"
         headers = {"apikey": os.getenv("API_KEY")}
         response = requests.get(url, headers=headers, data={}, allow_redirects=False)
         response.raise_for_status()
@@ -120,10 +121,10 @@ def get_currency(currency: str) -> float:
     return 0.0
 
 
-def json_currency() -> List[Dict[Hashable, Any]] | None:
+def json_currency() -> list[dict[str, Any]] | None:
     """Функция возвращает информацию о курсе валют, заданных в пользовательских настройках"""
     try:
-        with open('../user_settings.json', encoding="UTF-8") as json_file:
+        with open("../user_settings.json", encoding="UTF-8") as json_file:
             user_settings_data = json.load(json_file)
         final_result = []
         for element in user_settings_data["user_currencies"]:
@@ -135,25 +136,23 @@ def json_currency() -> List[Dict[Hashable, Any]] | None:
         return final_result
     except json.JSONDecodeError as ex:
         print("Invalid JSON data.")
+        return None
     # logger.error(f"Произошла ошибка: {ex}")
 
 
-def get_stock_prices(company: str):
+def get_stock_prices(company: str) -> float:
     """Функция возвращает актуальные данные по ценам акций"""
     symbol = company
-    api_url = 'https://api.api-ninjas.com/v1/stockprice?ticker={}'.format(symbol)
+    api_url = "https://api.api-ninjas.com/v1/stockprice?ticker={}".format(symbol)
     headers = {"X-Api-Key": os.getenv("API_KEY_2")}
     response = requests.get(api_url, headers=headers)
-    if response.status_code == requests.codes.ok:
-        return round(float(response.json()["price"]), 2)
-    else:
-        print("Error:", response.status_code, response.text)
+    return round(float(response.json()["price"]), 2)
 
 
-def json_stock_prices() -> List[Dict[Hashable, Any]] | None:
+def json_stock_prices() -> list[dict[str, Any]] | None:
     """Функция возвращает информацию о стоимости акций, заданных в пользовательских настройках"""
     try:
-        with open('../user_settings.json', encoding="UTF-8") as json_file:
+        with open("../user_settings.json", encoding="UTF-8") as json_file:
             user_settings_data = json.load(json_file)
         final_result = []
         for element in user_settings_data["user_stocks"]:
@@ -165,9 +164,10 @@ def json_stock_prices() -> List[Dict[Hashable, Any]] | None:
         return final_result
     except json.JSONDecodeError as ex:
         print("Invalid JSON data.")
+        return None
     # logger.error(f"Произошла ошибка: {ex}")
 
 
 trans = reading_excel("../data/operations.xlsx")
-print(top_transactions(search_transactions_for_month(trans, "2021-12-03 10:20:47")))
-#print(json_stock_prices())
+# print(top_transactions(search_transactions_for_month(trans, "2021-12-03 10:20:47")))
+#print(get_stock_prices("AAPL"))
