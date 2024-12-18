@@ -148,3 +148,8 @@ def test_profitable_cashback_categories(transactions_for_test):
     expected_result = {"Супермаркеты": 70, "Каршеринг": 20}
 
     assert json.loads(result) == expected_result
+
+
+def test_profitable_cashback_categories_empty_list():
+    result = profitable_cashback_categories([], '2021', '12')
+    assert result is None

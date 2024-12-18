@@ -62,50 +62,23 @@ def cards_information(transactions: List[Dict[Hashable, Any]]) -> list[dict[str,
     return final_result
 
 
-def top_transactions(transactions: List[Dict[Hashable, Any]]) -> str | None:
+def top_transactions(transactions: List[Dict[Hashable, Any]]) -> list[dict[str, Any]] | None:
     """Функция возвращает топ-5 транзакций по оплате за месяц"""
     df = pd.DataFrame(transactions)
-    # df['Дата операции'] = pd.to_datetime(df['Дата операции'], format='%d.%m.%Y %H:%M:%S')
-    # #rez = df.groupby("Дата операции")["Сумма операции с округлением"].max()
-    # df_grouped = df.groupby(df['Дата операции'].dt.date)['Сумма операции с округлением'].max().reset_index()
-    # df_grouped_sorted = df_grouped.sort_values(by='Сумма операции с округлением', ascending=False)
-    # df_dict = df_grouped_sorted.to_dict()
-    # print(df_dict)
-    # for index, item in enumerate(df_dict):
-    #     print(df_dict[item])
 
-    rez = df.sort_values(by="Сумма операции с округлением", ascending=False)
-    top_5 = df.head(5)
-    print(top_5)
+    result = []
+    top_transactions_df = df.nlargest(5, "Сумма операции с округлением")
+    for transaction in top_transactions_df.to_dict(orient="records"):
+        result.append(
+            {
+                "date": transaction["Дата операции"],
+                "amount": transaction["Сумма операции с округлением"],
+                "category": transaction["Категория"],
+                "description": transaction["Описание"],
+            }
+        )
+    return result
 
-    # # result = df.groupby("Дата операции")["Сумма операции с округлением"].max()
-    # result_2 = df.sort_values(by='Сумма операции с округлением', ascending=False)
-    # result_3 = result_2.to_dict()
-    # result_4 = []
-    # print(result_3)
-    # for value in result_3:
-    #     print(value)
-    #     for value_2 in result_3[value].values():
-    #         print(value_2)
-    #         if value_2 in result_4:
-    #             continue
-    #         else:
-    #             transaction = {
-    #                 'date': value_2[0],
-    #                 "amount": value_2[1],
-    #                 "category": value_2[2],
-    #                 "description": value_2[3]
-    #             }
-    #             result_4.append(transaction)
-    #     print(result_4)
-
-
-# {
-#      "date": "20.12.2021",
-#      "amount": 421.00,
-#      "category": "Различные товары",
-#      "description": "Ozon.ru"
-#    },
 
 
 def get_currency(currency: str) -> float:
@@ -169,5 +142,5 @@ def json_stock_prices() -> list[dict[str, Any]] | None:
 
 
 trans = reading_excel("../data/operations.xlsx")
-# print(top_transactions(search_transactions_for_month(trans, "2021-12-03 10:20:47")))
+#print(top_transactions(search_transactions_for_month(trans, "2021-12-03 10:20:47")))
 #print(get_stock_prices("AAPL"))

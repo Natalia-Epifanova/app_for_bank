@@ -153,11 +153,3 @@ def search_by_transfers_to_individuals(transactions: List[Dict[Hashable, Any]]) 
     else:
         logger.info("Словарь оказался пустым")
         return None
-
-
-trans = reading_excel("../data/operations.xlsx")
-# print(investment_bank("2021-12", trans, 50))
-# print(search_by_string(trans, 'Каршеринг'))
-# print(profitable_cashback_categories(trans, "2021", "3"))
-# print(search_by_phone(trans))
-# print(search_by_transfers_to_individuals(trans))
