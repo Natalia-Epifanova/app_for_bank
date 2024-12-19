@@ -9,9 +9,6 @@ from src.utils import (cards_information, get_currency, get_real_time_for_greeti
                        json_stock_prices, search_transactions_for_month, top_transactions)
 
 
-
-
-
 @patch("src.utils.datetime")
 def test_get_real_time_for_greetings_morning(mock_datetime):
     mock_datetime.now.return_value = datetime(2022, 10, 31, 8, 0, 0)
@@ -74,8 +71,6 @@ def test_get_currency_request_exception(mock_get):
     assert result == 0.0
 
 
-
-
 @patch("builtins.open", side_effect=FileNotFoundError)
 def test_json_currency_error(mock_file):
     data_for_test = json_currency("data/test.json")
@@ -111,8 +106,9 @@ def test_get_stock_prices_json_stock_prices(mock_get, mock_file):
 
 @patch("requests.get", side_effect=RequestException)
 def test_get_stock_prices_exception(mock_get):
-    result = get_stock_prices('AAPL')
+    result = get_stock_prices("AAPL")
     assert result == 0.0
+
 
 def test_search_transactions_for_month(transactions_for_test_filter_by_month):
     result = search_transactions_for_month(transactions_for_test_filter_by_month, "2021-11-25 10:20:47")
@@ -135,18 +131,17 @@ def test_top_transactions(transactions_for_test_without_transfers_to_ind):
     result = top_transactions(transactions_for_test_without_transfers_to_ind)
     expected_result = [
         {
-            "date": '28.12.2021',
+            "date": "28.12.2021",
             "amount": 257.89,
             "category": "Каршеринг",
             "description": "Ситидрайв",
         },
         {
-            "date": '31.12.2021',
+            "date": "31.12.2021",
             "amount": 160.89,
             "category": "Супермаркеты",
             "description": "Колхоз",
-        }
+        },
     ]
 
     assert result == expected_result
-

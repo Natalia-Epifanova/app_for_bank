@@ -14,8 +14,8 @@ def general_page(date_and_time: str) -> str | None:
 
     info_about_cards = cards_information(transactions_for_month)
     top_five = top_transactions(transactions_for_month)
-    currencies = json_currency()
-    stocks = json_stock_prices()
+    currencies = json_currency("../user_settings.json")
+    stocks = json_stock_prices("../user_settings.json")
 
     final_result = {
         "greeting": greeting,
@@ -27,4 +27,4 @@ def general_page(date_and_time: str) -> str | None:
     return json.dumps(final_result, ensure_ascii=False, indent=4)
 
 
-#print(general_page("2021-12-29 10:20:47"))
+print(general_page("2021-12-29 10:20:47"))

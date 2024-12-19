@@ -1,5 +1,6 @@
-import pytest
 import pandas as pd
+import pytest
+
 
 @pytest.fixture
 def transactions_for_test():
@@ -167,7 +168,7 @@ def transactions_data_frame() -> pd.DataFrame:
             "Номер карты": "*7197",
             "Категория": "Супермаркеты",
             "Сумма операции с округлением": 100.00,
-        }
+        },
     ]
     transactions_df = pd.DataFrame(transactions_data)
     return transactions_df

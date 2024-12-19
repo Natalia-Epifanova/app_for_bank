@@ -1,8 +1,9 @@
-
 import json
+import logging
 import os
-from typing import Any, Dict, Hashable, List
 from datetime import datetime
+from typing import Any, Dict, Hashable, List
+
 import pandas as pd
 import requests
 from dotenv import load_dotenv
@@ -10,11 +11,18 @@ from dotenv import load_dotenv
 from src.reading_excel_file import reading_excel
 
 load_dotenv("../.env")
+logger = logging.getLogger("utils")
+file_handler = logging.FileHandler("../logs/utils.log", mode="w", encoding="utf-8")
+file_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s: %(message)s")
+file_handler.setFormatter(file_formatter)
+logger.addHandler(file_handler)
+logger.setLevel(logging.DEBUG)
 
 
 def get_real_time_for_greetings() -> str:
     """Функция возвращает «Доброе утро» / «Добрый день» / «Добрый вечер» / «Доброй ночи»
     в зависимости от текущего времени."""
+    logger.info("Начало работы функции по возврату приветствия")
     current_date_time = datetime.now()
     if 6 <= current_date_time.hour <= 11:
         return "Доброе утро"
@@ -30,6 +38,7 @@ def search_transactions_for_month(
     originals_transactions: List[Dict[Hashable, Any]], date_time: str
 ) -> List[Dict[Hashable, Any]]:
     """Функция оставляет только транзакции за нужный месяц"""
+    logger.info("Начало работы функции по поиску транзакций за месяц")
     date_obj = datetime.strptime(date_time, "%Y-%m-%d %H:%M:%S")
     transactions_for_month = []
     if originals_transactions:
@@ -41,11 +50,13 @@ def search_transactions_for_month(
                 and date_obj_trans.year == date_obj.year
             ):
                 transactions_for_month.append(transaction)
+    logger.info("Функции по поиску транзакций за месяц завершена")
     return transactions_for_month
 
 
 def cards_information(transactions: List[Dict[Hashable, Any]]) -> list[dict[str, Any]] | None:
     """Функция возвращает расходы и кэшбеки по всей карте за месяц"""
+    logger.info("Начало работы функции по возврату расходов и кэшбэков за месяц")
     df = pd.DataFrame(transactions)
     result = df.groupby("Номер карты")["Сумма операции"].sum()
 
@@ -59,11 +70,13 @@ def cards_information(transactions: List[Dict[Hashable, Any]]) -> list[dict[str,
             "cashback": round(abs(values) / 100, 2),
         }
         final_result.append(card)
+    logger.info("Функция по возврату расходов и кэшбэков за месяц отработала успешно")
     return final_result
 
 
 def top_transactions(transactions: List[Dict[Hashable, Any]]) -> list[dict[str, Any]] | None:
     """Функция возвращает топ-5 транзакций по оплате за месяц"""
+    logger.info("Начало работы функции по возврату топ-5 транзакций за месяц")
     df = pd.DataFrame(transactions)
 
     result = []
@@ -77,27 +90,31 @@ def top_transactions(transactions: List[Dict[Hashable, Any]]) -> list[dict[str, 
                 "description": transaction["Описание"],
             }
         )
+    logger.info("Функция по возврату топ-5 транзакций за месяц отработала успешно")
     return result
-
 
 
 def get_currency(currency: str) -> float:
     """Функция возвращает актуальные данные курса валют"""
+    logger.info("Начало работы функции по возврату курса валют по API")
     try:
         url = f"https://api.apilayer.com/exchangerates_data/convert?to=RUB&from=" f"{currency}&amount=1"
         headers = {"apikey": os.getenv("API_KEY")}
         response = requests.get(url, headers=headers, data={}, allow_redirects=False)
         response.raise_for_status()
+        logger.info("Функция по возврату актуальных данных курса валют отработала успешно")
         return round(float(response.json()["result"]), 2)
-    except requests.exceptions.RequestException:
+    except requests.exceptions.RequestException as ex:
+        logger.error(f"Произошла ошибка: {ex}")
         print("An error occurred. Please try again later.")
     return 0.0
 
 
-def json_currency() -> list[dict[str, Any]] | None:
+def json_currency(path: str) -> list[dict[str, Any]] | None:
     """Функция возвращает информацию о курсе валют, заданных в пользовательских настройках"""
     try:
-        with open("../user_settings.json", encoding="UTF-8") as json_file:
+        logger.info("Начало работы функции по возврату курса валют, заданных в пользовательских настройках")
+        with open(path, encoding="UTF-8") as json_file:
             user_settings_data = json.load(json_file)
         final_result = []
         for element in user_settings_data["user_currencies"]:
@@ -106,26 +123,36 @@ def json_currency() -> list[dict[str, Any]] | None:
                 "rate": get_currency(element),
             }
             final_result.append(currency_info)
+        logger.info("Функция по возврату курса валют, заданных в пользовательских настройках отработала успешно")
         return final_result
-    except json.JSONDecodeError as ex:
-        print("Invalid JSON data.")
+    except FileNotFoundError as ex:
+        logger.error(f"Произошла ошибка: {ex}")
         return None
-    # logger.error(f"Произошла ошибка: {ex}")
 
 
 def get_stock_prices(company: str) -> float:
     """Функция возвращает актуальные данные по ценам акций"""
-    symbol = company
-    api_url = "https://api.api-ninjas.com/v1/stockprice?ticker={}".format(symbol)
-    headers = {"X-Api-Key": os.getenv("API_KEY_2")}
-    response = requests.get(api_url, headers=headers)
-    return round(float(response.json()["price"]), 2)
+    try:
+        logger.info("Начало работы функции по возврату цен акций по API")
+        symbol = company
+        api_url = "https://api.api-ninjas.com/v1/stockprice?ticker={}".format(symbol)
+        headers = {"X-Api-Key": os.getenv("API_KEY_2")}
+        response = requests.get(api_url, headers=headers)
+        logger.info("Функция по возврату актуальных данных по ценам акций отработала успешно")
+        return round(float(response.json()["price"]), 2)
+    except requests.exceptions.RequestException as ex:
+        logger.error(f"Произошла ошибка: {ex}")
+        print("An error occurred. Please try again later.")
+    return 0.0
 
 
-def json_stock_prices() -> list[dict[str, Any]] | None:
+def json_stock_prices(path: str) -> list[dict[str, Any]] | None:
     """Функция возвращает информацию о стоимости акций, заданных в пользовательских настройках"""
     try:
-        with open("../user_settings.json", encoding="UTF-8") as json_file:
+        logger.info(
+            "Начало работы функции по возврату информации о стоимости акций, заданных в пользовательских настройках"
+        )
+        with open(path, encoding="UTF-8") as json_file:
             user_settings_data = json.load(json_file)
         final_result = []
         for element in user_settings_data["user_stocks"]:
@@ -134,13 +161,10 @@ def json_stock_prices() -> list[dict[str, Any]] | None:
                 "price": get_stock_prices(element),
             }
             final_result.append(currency_info)
+        logger.info(
+            "Функция по возврату информации о стоимости акций, заданных в пользовательских настройках отработала успешно"
+        )
         return final_result
-    except json.JSONDecodeError as ex:
-        print("Invalid JSON data.")
+    except FileNotFoundError as ex:
+        logger.error(f"Произошла ошибка: {ex}")
         return None
-    # logger.error(f"Произошла ошибка: {ex}")
-
-
-trans = reading_excel("../data/operations.xlsx")
-#print(top_transactions(search_transactions_for_month(trans, "2021-12-03 10:20:47")))
-#print(get_stock_prices("AAPL"))

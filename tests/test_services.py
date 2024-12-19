@@ -6,32 +6,39 @@ from src.services import (investment_bank, profitable_cashback_categories, searc
                           search_by_transfers_to_individuals)
 
 
-@pytest.mark.parametrize('search_string, expected', [(
-        "Каршеринг", [
-            {
-                "Дата операции": "28.12.2021 18:42:21",
-                "Дата платежа": "28.12.2021",
-                "Номер карты": "*7197",
-                "Сумма операции": -257.9,
-                "Кэшбэк": 20,
-                "Категория": "Каршеринг",
-                "Описание": "Ситидрайв",
-            }
-        ]
-),
-    ("Колхоз",
-     [
-         {
-             "Дата операции": "31.12.2021 16:44:00",
-             "Дата платежа": "31.12.2021",
-             "Номер карты": "*7197",
-             "Сумма операции": -160.9,
-             "Кэшбэк": 70,
-             "Категория": "Супермаркеты",
-             "Описание": "Колхоз",
-         }
-     ]
-     )])
+@pytest.mark.parametrize(
+    "search_string, expected",
+    [
+        (
+            "Каршеринг",
+            [
+                {
+                    "Дата операции": "28.12.2021 18:42:21",
+                    "Дата платежа": "28.12.2021",
+                    "Номер карты": "*7197",
+                    "Сумма операции": -257.9,
+                    "Кэшбэк": 20,
+                    "Категория": "Каршеринг",
+                    "Описание": "Ситидрайв",
+                }
+            ],
+        ),
+        (
+            "Колхоз",
+            [
+                {
+                    "Дата операции": "31.12.2021 16:44:00",
+                    "Дата платежа": "31.12.2021",
+                    "Номер карты": "*7197",
+                    "Сумма операции": -160.9,
+                    "Кэшбэк": 70,
+                    "Категория": "Супермаркеты",
+                    "Описание": "Колхоз",
+                }
+            ],
+        ),
+    ],
+)
 def test_search_by_string_description(transactions_for_test, search_string, expected):
     result = search_by_string(transactions_for_test, search_string)
     assert json.loads(result) == expected
@@ -150,5 +157,5 @@ def test_profitable_cashback_categories(transactions_for_test):
 
 
 def test_profitable_cashback_categories_empty_list():
-    result = profitable_cashback_categories([], '2021', '12')
+    result = profitable_cashback_categories([], "2021", "12")
     assert result is None

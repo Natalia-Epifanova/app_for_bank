@@ -17,7 +17,7 @@ logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)
 
 
-def profitable_cashback_categories(transactions: List[Dict[Hashable, Any]], year:str, month:str) -> str | None:
+def profitable_cashback_categories(transactions: List[Dict[Hashable, Any]], year: str, month: str) -> str | None:
     """Функция считает, какие были более выгодные категории кешбека в выбранном месяце"""
     logger.info("Начало работы функции для поиска более выгодных категорий кешбека")
     if not isinstance(month, str) or not isinstance(transactions, list) or not isinstance(year, str):
@@ -34,9 +34,7 @@ def profitable_cashback_categories(transactions: List[Dict[Hashable, Any]], year
         logger.info("Обработка всех оплат за заданный месяц")
 
         df = pd.DataFrame(transactions_for_month)
-        logger.info("Группировка по категориям кэшбэка")
         result = df.groupby("Категория")["Кэшбэк"].sum()
-        logger.info("Сортировка кэшбэка по убыванию")
         result = result.sort_values(ascending=False)
         result_dict = result.to_dict()
 
@@ -71,7 +69,6 @@ def investment_bank(month: str, transactions: List[Dict[Hashable, Any]], limit: 
 
         sum_for_invest = 0.0
         if transactions_for_month:
-            logger.info("Обработка всех оплат за заданный месяц")
             for transaction in transactions_for_month:
                 sum_of_operation = str(transaction.get("Сумма операции"))
                 if sum_of_operation[0] == "-":
@@ -85,9 +82,8 @@ def investment_bank(month: str, transactions: List[Dict[Hashable, Any]], limit: 
         return None
 
 
-
 def search_by_string(transactions: List[Dict[Hashable, Any]], string_for_search: str) -> str | None:
-    """Функция возвращает список словарей с транзакциями, у которых в описании есть необходимая слово/строка"""
+    """Функция возвращает список словарей с транзакциями, у которых в описании или категории есть необходимая слово/строка"""
     logger.info("Начало работы функции для поиска по строке")
     if not isinstance(transactions, list) or not isinstance(string_for_search, str):
         logger.error("Неверный тип входных данных")
