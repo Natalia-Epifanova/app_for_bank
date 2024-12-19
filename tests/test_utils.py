@@ -3,10 +3,13 @@ from datetime import datetime
 from unittest.mock import mock_open, patch
 
 import pytest
-from requests import JSONDecodeError, RequestException
+from requests import RequestException
 
 from src.utils import (cards_information, get_currency, get_real_time_for_greetings, get_stock_prices, json_currency,
-                       json_stock_prices, search_transactions_for_month)
+                       json_stock_prices, search_transactions_for_month, top_transactions)
+
+
+
 
 
 @patch("src.utils.datetime")
@@ -56,7 +59,7 @@ def test_get_currency_json_currency(mock_get, mock_file):
         "result": 104.5,
     }
     assert get_currency("USD") == 104.5
-    answer_for_test = json_currency()
+    answer_for_test = json_currency("../user_settings.json")
     assert answer_for_test == [
         {
             "currency": "USD",
@@ -71,11 +74,18 @@ def test_get_currency_request_exception(mock_get):
     assert result == 0.0
 
 
-#
-# @patch("builtins.open", new_callable=mock_open, read_data="")
-# def test_json_currency_error(mock_file):
-#     with pytest.raises(JSONDecodeError):
-#         json_currency()
+
+
+@patch("builtins.open", side_effect=FileNotFoundError)
+def test_json_currency_error(mock_file):
+    data_for_test = json_currency("data/test.json")
+    assert data_for_test is None
+
+
+@patch("builtins.open", side_effect=FileNotFoundError)
+def test_json_stock_prices_error(mock_file):
+    data_for_test = json_stock_prices("data/test.json")
+    assert data_for_test is None
 
 
 @patch("builtins.open", new_callable=mock_open, read_data='{"user_stocks": ["AAPL"]}')
@@ -90,7 +100,7 @@ def test_get_stock_prices_json_stock_prices(mock_get, mock_file):
         "currency": "USD",
     }
     assert get_stock_prices("AAPL") == 253.48
-    answer_for_test = json_stock_prices()
+    answer_for_test = json_stock_prices("../user_settings.json")
     assert answer_for_test == [
         {
             "stock": "AAPL",
@@ -98,6 +108,11 @@ def test_get_stock_prices_json_stock_prices(mock_get, mock_file):
         }
     ]
 
+
+@patch("requests.get", side_effect=RequestException)
+def test_get_stock_prices_exception(mock_get):
+    result = get_stock_prices('AAPL')
+    assert result == 0.0
 
 def test_search_transactions_for_month(transactions_for_test_filter_by_month):
     result = search_transactions_for_month(transactions_for_test_filter_by_month, "2021-11-25 10:20:47")
@@ -114,3 +129,24 @@ def test_search_transactions_for_month(transactions_for_test_filter_by_month):
     ]
 
     assert result == expected_result
+
+
+def test_top_transactions(transactions_for_test_without_transfers_to_ind):
+    result = top_transactions(transactions_for_test_without_transfers_to_ind)
+    expected_result = [
+        {
+            "date": '28.12.2021',
+            "amount": 257.89,
+            "category": "Каршеринг",
+            "description": "Ситидрайв",
+        },
+        {
+            "date": '31.12.2021',
+            "amount": 160.89,
+            "category": "Супермаркеты",
+            "description": "Колхоз",
+        }
+    ]
+
+    assert result == expected_result
+
