@@ -1,12 +1,9 @@
-import json
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, Hashable, List, Optional
+from typing import Any, Callable, Optional
 
 import pandas as pd
-from typing_extensions import final
 
-from src.reading_excel_file import reading_excel
 
 logger = logging.getLogger("reports")
 file_handler = logging.FileHandler("../logs/reports.log", mode="w", encoding="utf-8")

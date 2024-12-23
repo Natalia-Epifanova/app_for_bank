@@ -1,5 +1,3 @@
-import pandas as pd
-
 from src.reports import spending_by_category, writing_data
 
 

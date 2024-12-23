@@ -8,7 +8,6 @@ import pandas as pd
 import requests
 from dotenv import load_dotenv
 
-from src.reading_excel_file import reading_excel
 
 load_dotenv("../.env")
 logger = logging.getLogger("utils")
@@ -162,7 +161,8 @@ def json_stock_prices(path: str) -> list[dict[str, Any]] | None:
             }
             final_result.append(currency_info)
         logger.info(
-            "Функция по возврату информации о стоимости акций, заданных в пользовательских настройках отработала успешно"
+            "Функция по возврату информации о стоимости акций, "
+            "заданных в пользовательских настройках отработала успешно"
         )
         return final_result
     except FileNotFoundError as ex:

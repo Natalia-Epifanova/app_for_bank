@@ -7,7 +7,6 @@ from typing import Any, Dict, Hashable, List
 
 import pandas as pd
 
-from src.reading_excel_file import reading_excel
 
 logger = logging.getLogger("services")
 file_handler = logging.FileHandler("../logs/services.log", mode="w", encoding="utf-8")
@@ -83,7 +82,8 @@ def investment_bank(month: str, transactions: List[Dict[Hashable, Any]], limit: 
 
 
 def search_by_string(transactions: List[Dict[Hashable, Any]], string_for_search: str) -> str | None:
-    """Функция возвращает список словарей с транзакциями, у которых в описании или категории есть необходимая слово/строка"""
+    """Функция возвращает список словарей с транзакциями, у которых в описании или категории
+    есть необходимая слово/строка"""
     logger.info("Начало работы функции для поиска по строке")
     if not isinstance(transactions, list) or not isinstance(string_for_search, str):
         logger.error("Неверный тип входных данных")

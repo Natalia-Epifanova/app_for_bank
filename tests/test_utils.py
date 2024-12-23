@@ -1,8 +1,6 @@
-import json
 from datetime import datetime
 from unittest.mock import mock_open, patch
 
-import pytest
 from requests import RequestException
 
 from src.utils import (cards_information, get_currency, get_real_time_for_greetings, get_stock_prices, json_currency,
